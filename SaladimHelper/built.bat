@@ -1,0 +1,2 @@
+copy "D:\Projects\CelesteMod\SaladimHelper\SaladimHelper\bin\Debug\net452\MadelineIsYouLexer.dll" "C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\SaladimHelper\MadelineIsYouLexer.dll"
+copy "D:\Projects\CelesteMod\SaladimHelper\SaladimHelper\bin\Debug\net452\SaladimHelper.dll" "C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\SaladimHelper\SaladimHelper.dll"
