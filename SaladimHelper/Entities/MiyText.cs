@@ -9,7 +9,7 @@ namespace Celeste.Mod.SaladimHelper.Entities;
 [CustomEntity("SaladimHelper/MiyText"), Tracked(false)]
 public class MiyText : Solid
 {
-    private bool HasTexture = false;
+    private readonly bool HasTexture = false;
 
     public string Text { get; protected set; }
 

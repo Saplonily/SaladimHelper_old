@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.Entities;
+﻿using System.Linq;
+using Celeste.Mod.Entities;
 using MadelineIsYouLexer;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -23,6 +24,19 @@ public class MiyDreamBlock : DreamBlock, IEntity
 
     public bool HasAdv(string adv, SingleNameSubject another)
     {
+        if (adv == "be_ridden_by")
+        {
+            return another.EntityName == "madeline"
+                ? SceneAs<Level>()
+                    .Tracker
+                    .GetEntities<Player>()
+                    .Any(p => (p as Player).IsRiding(this))
+                : SceneAs<Level>()
+                    .Tracker
+                    .GetEntities<Actor>()
+                    .Where(a => (a as Actor).IsRiding(this) && (a as IEntity)?.Name == another.EntityName)
+                    .Any();
+        }
         return false;
     }
 

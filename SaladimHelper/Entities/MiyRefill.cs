@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.Entities;
+﻿using System.Linq;
+using Celeste.Mod.Entities;
 using MadelineIsYouLexer;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -25,25 +26,27 @@ public class MiyRefill : Refill, IEntity
     public override void Update()
     {
         base.Update();
-        MiyHelper.DoBasicIsCheck(this, this);
-        if(MiyHelper.TryGetManager(out var manager))
+        if (MiyHelper.DoBasicIsCheck(this, this))
         {
-            if(ThisData.Get<bool>("twoDashes") is false && manager.HasAdjFeature(this, "is", "two"))
+            if (MiyHelper.TryGetManager(out var manager, out _))
             {
-                MiyRefill refill = new(Position, true, false);
-                Level level = SceneAs<Level>();
-                level.Add(refill);
-                RemoveSelf();
-                MiyHelper.MakeIsParticles(this, level.ParticlesFG, 40);
-            }
-            if(ThisData.Get<bool>("twoDashes") is true && manager.HasAdjFeature(this, "is", "one"))
-            {
-                MiyRefill refill = new(Position, false, false);
-                Level level = SceneAs<Level>();
-                level.Add(refill);
-                RemoveSelf();
-                MiyHelper.MakeIsParticles(this, level.ParticlesFG, 40);
+                if (ThisData.Get<bool>("twoDashes") is false && manager.HasAdjFeature(this, "is", "two"))
+                {
+                    MiyRefill refill = new(Position, true, false);
+                    Level level = SceneAs<Level>();
+                    level.Add(refill);
+                    RemoveSelf();
+                    MiyHelper.MakeIsParticles(this, level.ParticlesFG, 40);
+                }
+                if (ThisData.Get<bool>("twoDashes") is true && manager.HasAdjFeature(this, "is", "one"))
+                {
+                    MiyRefill refill = new(Position, false, false);
+                    Level level = SceneAs<Level>();
+                    level.Add(refill);
+                    RemoveSelf();
+                    MiyHelper.MakeIsParticles(this, level.ParticlesFG, 40);
 
+                }
             }
         }
     }
@@ -51,6 +54,16 @@ public class MiyRefill : Refill, IEntity
 
     public bool HasAdv(string adv, SingleNameSubject another)
     {
+        if (adv == "be_ridden_by")
+        {
+            return CollideAll<Solid>().Where(e => e is IEntity ie && ie.Name == another.EntityName).Any()
+                || CollideAll<Actor>()
+                .Where(e =>
+                    (e is IEntity ie && ie.Name == another.EntityName) ||
+                    (another.EntityName == "madeline" && e is Player p && p.Get<MiyMadelineComponent>() is not null)
+                )
+                .Any();
+        }
         return false;
     }
 }

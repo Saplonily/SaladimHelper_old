@@ -21,6 +21,9 @@ public class ModuleSession : EverestModuleSession
     [YamlIgnore]
     public MiyRuleManagedField CurrentMiyField;
 
+    [YamlIgnore]
+    public bool SwitchedLight = false;
+
     public NoneAdvAbleEntity GetNoneAdvAbleEntity(string name)
     {
         NoneAdvAbleEntity.Name = name;

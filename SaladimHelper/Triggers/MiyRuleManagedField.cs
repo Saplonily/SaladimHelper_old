@@ -15,12 +15,14 @@ public class MiyRuleManagedField : Trigger
 {
     public RuleManager RuleManager;
     public int GridSize;
+    public float BeEntityTriggerAlarm = 0.5f;
+    public bool NeedBeEntityCheck => BeEntityTriggerAlarm <= 0.0f;
 
     public MiyRuleManagedField(EntityData data, Vector2 offset) : base(data, offset)
     {
         RuleManager = new(
             new string[] { "madeline", "dashes", "falling_block", "dream_block", "refill" },
-            new string[] { "be_crushed_by" },
+            new string[] { "be_crushed_by", "be_ridden_by" },
             new string[] { "has", "is" },
             new string[] { "two", "one" }
             );
@@ -31,17 +33,17 @@ public class MiyRuleManagedField : Trigger
     {
         IEnumerable<MiyText> miyTexts = CollideAll<MiyText>().Cast<MiyText>();
         List<LocatedWord> locatedWords = new();
-        foreach(var miyText in miyTexts)
+        foreach (var miyText in miyTexts)
         {
             int x = (int)Math.Round((miyText.X - X) / GridSize);
             int y = (int)Math.Round((miyText.Y - Y) / GridSize);
             locatedWords.Add(new(x, y, miyText.Text, miyText.OnParsed));
         }
         RuleManager.ParseAndUse(locatedWords);
-        if(RuleManager.Rules.Count != 0)
+        if (RuleManager.Rules.Count != 0)
         {
             Logger.Log(LogLevel.Info, "MiySaladimHelper", "Rules contains:");
-            foreach(var rule in RuleManager.Rules)
+            foreach (var rule in RuleManager.Rules)
             {
                 Logger.Log(LogLevel.Info, "MiySaladimHelper", rule.ToString());
             }
@@ -57,12 +59,14 @@ public class MiyRuleManagedField : Trigger
 
     public override void Update()
     {
+        if (BeEntityTriggerAlarm <= 0.0f) BeEntityTriggerAlarm = 0.2f;
+        BeEntityTriggerAlarm -= Engine.DeltaTime;
         Level level = SceneAs<Level>();
-        if(RuleManager.HasAdjFeature(Module.Session.GetNoneAdvAbleEntity("dashes"), "is", "two"))
+        if (RuleManager.HasAdjFeature(Module.Session.GetNoneAdvAbleEntity("dashes"), "is", "two"))
         {
             level.Session.Inventory.Dashes = 2;
         }
-        if(RuleManager.HasAdjFeature(Module.Session.GetNoneAdvAbleEntity("dashes"), "is", "one"))
+        if (RuleManager.HasAdjFeature(Module.Session.GetNoneAdvAbleEntity("dashes"), "is", "one"))
         {
             level.Session.Inventory.Dashes = 1;
         }

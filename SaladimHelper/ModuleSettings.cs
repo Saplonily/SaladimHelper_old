@@ -6,7 +6,5 @@ namespace Celeste.Mod.SaladimHelper;
 public class ModuleSettings : EverestModuleSettings
 {
     [DefaultButtonBinding(Buttons.RightShoulder, Keys.X)]
-    public ButtonBinding DoTp { get; set; } = new();
-
-    public bool UseCustomKeys { get; set; }
+    public ButtonBinding DoATeleportOrLightSwitch { get; set; } = new();
 }

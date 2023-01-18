@@ -44,7 +44,7 @@ public class KeyTeleField : Trigger
         {
             Module.Session.TeleFieldIn = null; return;
         }
-        if (ModuleInput.DoTp.Pressed)
+        if (ModuleInput.DoATeleportOrLightSwitch.Pressed)
         {
             var str = $"Pressed DoTp input,start teleport player...,target room sid={field.TargetRoomId},aim={field.Aim}";
             Logger.Log(LogLevel.Verbose, Module.Name, str);
@@ -58,7 +58,7 @@ public class KeyTeleField : Trigger
                 TeleportHelper.DoCrossRoomTeleport(player, field.TargetRoomId, field.Aim, field);
             }
 
-            ModuleInput.DoTp.ConsumeBuffer();
+            ModuleInput.DoATeleportOrLightSwitch.ConsumeBuffer();
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace MadelineIsYouLexer;
 
@@ -25,7 +26,12 @@ public class AdvSubject : ISubjectMarker
 
     private bool IsEntityFeaturedComfusAdv(IEntity entity, string adv, ISubjectMarker subjectMarker)
     {
-        if(subjectMarker is SingleNameSubject singleNameSubject)
+        if (subjectMarker is null)
+        {
+            throw new ArgumentNullException(nameof(subjectMarker));
+        }
+
+        if (subjectMarker is SingleNameSubject singleNameSubject)
         {
             return entity.HasAdv(adv, singleNameSubject);
         }

@@ -62,19 +62,26 @@ public class MiyManager
 
     private static PlayerDeadBody Player_Die(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
-        PlayerDeadBody deadBody;
-        if(!self.SceneAs<Level>().Any(e => e is Player p && p != self))
+        if(Module.Session.CurrentMiyField != null)
         {
-            deadBody = orig(self, direction, evenIfInvincible, registerDeathInStats);
-            Module.Session.CurrentMiyField = null;
+            PlayerDeadBody deadBody;
+            if(!self.SceneAs<Level>().Any(e => e is Player p && p != self))
+            {
+                deadBody = orig(self, direction, evenIfInvincible, registerDeathInStats);
+                Module.Session.CurrentMiyField = null;
+            }
+            else
+            {
+                deadBody = new(self, direction);
+                self.SceneAs<Level>().Add(deadBody);
+                self.RemoveSelf();
+            }
+            return deadBody;
         }
         else
         {
-            deadBody = new(self, direction);
-            self.SceneAs<Level>().Add(deadBody);
-            self.RemoveSelf();
+            return orig(self, direction, evenIfInvincible, registerDeathInStats);
         }
-        return deadBody;
     }
 
     private static void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode)

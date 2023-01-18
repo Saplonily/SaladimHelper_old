@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using Celeste.Mod.Entities;
@@ -7,24 +8,21 @@ using Monocle;
 
 namespace Celeste.Mod.SaladimHelper.Entities;
 
-[CustomEntity("SaladimHelper/reelCamera", "SaladimHelper/ReelCamera")]
+[CustomEntity("SaladimHelper/reelCamera", "SaladimHelper/ReelCamera"), Tracked]
 public class ReelCamera : Entity
 {
     public Vector2[] Nodes;
-    public float[] NodesDistance;
-    public float NodesDistanceSum;
+    public Vector2 CameraPosition;
+
     public bool SquashHorizontalArea = true;
 
-    public float[] MoveSpeeds;
+    public float[] MoveTimes;
     public float[] DelaySequence;
+    public float StartDelay;
+    public float StartMoveTime;
 
-    public float Progress = 0.0f;
-    public float LengthProgress = 0.0f;
-
-    protected Tween readyTween;
-    protected bool ready = false;
-    protected bool delaying = false;
-    protected float delayTimeLeft = 0.0f;
+    public bool Delaying = false;
+    public Player DoingPlayer = null;
 
     public bool LeadingTheReel
     {
@@ -37,14 +35,10 @@ public class ReelCamera : Entity
         Collider = new Hitbox(data.Width, data.Height);
 
         Nodes = data.NodesOffset(offset);
-        NodesDistance = new float[Nodes.Length - 1];
-        for(int i = 0; i < Nodes.Length - 1; i++)
+        for(int i = 0; i < Nodes.Length; i++)
         {
-            var node1 = Nodes[i];
-            var node2 = Nodes[i + 1];
-            NodesDistance[i] = Vector2.Distance(node2, node1);
+            Nodes[i] = Nodes[i] with { X = Nodes[i].X + Width / 2, Y = Nodes[i].Y + Height / 2 };
         }
-        NodesDistanceSum = NodesDistance.Sum();
 
         try
         {
@@ -53,19 +47,14 @@ public class ReelCamera : Entity
             if(moveTimeSequenceStrs.Length != Nodes.Length - 1)
                 throw new Exception($"MoveEime sequence load failed. Except {Nodes.Length - 1}(Nodes.Length) " +
                     $"but got {moveTimeSequenceStrs.Length}");
-            var moveTimes = (
+            MoveTimes = (
                 from moveTimeStr in moveTimeSequenceStrs
                 let moveTime = float.Parse(moveTimeStr)
                 select moveTime
                 ).ToArray();
-            MoveSpeeds = new float[moveTimes.Length];
-            for(int i = 0; i < moveTimes.Length; i++)
-            {
-                MoveSpeeds[i] = NodesDistance[i] / (moveTimes[i] * 60.0f);
-            }
 
             var delaySequenceStr = data.Attr("delay_sequence");
-            var delaySequenceStrs = moveTimeSequenceStr.Split(',');
+            var delaySequenceStrs = delaySequenceStr.Split(',');
             if(delaySequenceStrs.Length != Nodes.Length - 1)
                 throw new Exception($"Delay sequence load failed. Except {Nodes.Length - 1}(Nodes.Length) " +
                     $"but got {delaySequenceStrs.Length}");
@@ -76,7 +65,7 @@ public class ReelCamera : Entity
                 ).ToArray();
 
             StringBuilder sb = new();
-            sb.Append(string.Join("|", MoveSpeeds));
+            sb.Append(string.Join("|", MoveTimes));
             sb.Append(@"\\\\");
             sb.Append(string.Join("|", DelaySequence));
             Logger.Log(LogLevel.Info, "SaladimHelper", $"Loaded ReelCamera: {sb}");
@@ -87,143 +76,150 @@ public class ReelCamera : Entity
         }
 
         SquashHorizontalArea = data.Bool("squash_horizontal_area", true);
+        StartDelay = data.Float("start_delay", 1.0f);
+        StartMoveTime = data.Float("start_move_time", 1.0f);
     }
 
     public override void Update()
     {
         base.Update();
-        Level lvl = Engine.Scene as Level;
-        Player player = lvl.Tracker.GetEntity<Player>();
-        Player colliderPlayer = CollideFirst<Player>();
-        if(colliderPlayer is not null)
+        Level level = SceneAs<Level>();
+        var c = level.Camera;
+        if(LeadingTheReel)
         {
-            LeadingTheReel = true;
-        }
-
-        if(LeadingTheReel && player is not null)
-        {
-            if(readyTween is null)
-            {
-                readyTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, 1.0f);
-                Vector2 start = lvl.Camera.Position;
-                Vector2 end = Nodes[0] -
-                    new Vector2(lvl.Camera.Right - lvl.Camera.Left, lvl.Camera.Bottom - lvl.Camera.Top) / 2;
-                readyTween.OnUpdate = t =>
+            if(Delaying && Get<Coroutine>() != null && DoingPlayer != null)
+                if(DoPlayerDieCheck(level, DoingPlayer, SquashHorizontalArea, SquashHorizontalArea, false))
                 {
-                    lvl.Camera.Position = Calc.LerpSnap(start, end, t.Percent);
-                };
-                readyTween.OnComplete = t =>
-                {
-                    ready = true;
-                };
-                readyTween.Start();
-                Add(readyTween);
-            }
-            if(ready)
-            {
-                do
-                {
-                    int currentNodeIndex = (int)Progress;
-                    if(currentNodeIndex == Nodes.Length - 1)
-                    {
-                        break;
-                    }
-
-                    lvl.Camera.Position = Calc.LerpSnap(
-                        Nodes[currentNodeIndex],
-                        Nodes[currentNodeIndex + 1],
-                        Progress - currentNodeIndex
-                        ) - new Vector2(lvl.Camera.Right - lvl.Camera.Left, lvl.Camera.Bottom - lvl.Camera.Top) / 2;
-
-                    bool delayLiftedJustNow = false;
-                    if(delaying)
-                    {
-                        delayTimeLeft -= Engine.DeltaTime;
-                        if(delayTimeLeft <= 0.0f)
-                        {
-                            delaying = false;
-                            LengthProgress += MoveSpeeds[currentNodeIndex];
-                            delayLiftedJustNow = true;
-                        }
-                        else
-                        {
-                            if(player.X < lvl.Camera.Left - player.Width)
-                            {
-                                var afterX = lvl.Camera.Left - player.Width;
-                                player.X = afterX;
-                            }
-                            else if(player.X > lvl.Camera.Right + player.Width)
-                            {
-                                var afterX = lvl.Camera.Right + player.Width;
-                                player.X = afterX;
-                            }
-                            if(player.Y < lvl.Camera.Top - player.Height)
-                            {
-                                player.Y = lvl.Camera.Top - player.Height;
-                            }
-                            else if(player.Y > lvl.Camera.Bottom + player.Height)
-                                player.Die(Vector2.UnitY);
-                            break;
-                        }
-                    }
-
-                    #region 一堆碰撞和死亡判断
-                    Vector2 dir = (Nodes[currentNodeIndex + 1] - Nodes[currentNodeIndex]).SafeNormalize();
-                    bool xPositive = dir.X > 0;
-                    bool yPositive = dir.Y > 0;
-                    if(player.X < lvl.Camera.Left - player.Width)
-                    {
-                        var afterX = lvl.Camera.Left - player.Width;
-                        player.X = afterX;
-                        if(player.CollideFirst<Solid>() is not null)
-                            player.Die(Vector2.Zero);
-
-                        if(!SquashHorizontalArea && xPositive)
-                            player.Die(Vector2.UnitX);
-                    }
-                    else if(player.X > lvl.Camera.Right + player.Width)
-                    {
-                        var afterX = lvl.Camera.Right + player.Width;
-                        player.X = afterX;
-                        if(player.CollideFirst<Solid>() is not null)
-                            player.Die(Vector2.Zero);
-
-                        if(!SquashHorizontalArea && !xPositive)
-                            player.Die(-Vector2.UnitX);
-                    }
-                    if(player.Y < lvl.Camera.Top - player.Height)
-                    {
-                        if(yPositive) player.Die(-Vector2.UnitY);
-                        player.Y = lvl.Camera.Top - player.Height;
-                    }
-                    else if(player.Y > lvl.Camera.Bottom + player.Height)
-                        player.Die(Vector2.UnitY);
-                    #endregion
-
-                    float allLengthNeedToPast = new ArraySegment<float>(NodesDistance, 0, currentNodeIndex + 1).Sum();
-                    LengthProgress += MoveSpeeds[currentNodeIndex];
-
-                    var curSubProgress = (NodesDistance[currentNodeIndex] - (allLengthNeedToPast - LengthProgress))
-                        / NodesDistance[currentNodeIndex];
-                    var preProgress = Progress;
-                    Progress = currentNodeIndex + curSubProgress;
-
-                    if(!delaying && !delayLiftedJustNow)
-                    {
-                        if((int)Progress != currentNodeIndex)
-                        {
-                            delaying = true;
-                            delayTimeLeft = DelaySequence[currentNodeIndex];
-
-                            LengthProgress -= MoveSpeeds[currentNodeIndex];
-                            Progress = preProgress;
-                        }
-                    }
-
-
+                    LeadingTheReel = false;
                 }
-                while(1 + 1 == 3);
+        }
+        else
+        {
+            Player player = CollideFirst<Player>();
+            if(player is not null)
+            {
+                DoingPlayer = player;
+                LeadingTheReel = true;
+                Add(new Coroutine(GetMovingCoroutine(level, player)));
+                CameraPosition = c.Position + new Vector2(c.Right - c.Left, c.Bottom - c.Top) / 2;
+            }
+            else
+            {
+                LeadingTheReel = false;
+            }
+        }
+    }
 
+    public IEnumerator GetMovingCoroutine(Level level, Player player)
+    {
+        DoingPlayer = player;
+        Camera c = level.Camera;
+        bool startTweenCompleted = false;
+        Vector2 startFrom = CameraPosition;
+        Vector2 startTo = Nodes[0];
+        Tween startTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, StartMoveTime);
+        startTween.OnUpdate = t => CameraPosition = Calc.LerpSnap(startFrom, startTo, t.Eased);
+        startTween.OnComplete = _ => startTweenCompleted = true;
+        Add(startTween);
+        startTween.Start();
+        Vector2 ps = startTo - startFrom;
+        while(!startTweenCompleted)
+        {
+            if(DoPlayerDieCheck(level, player, SquashHorizontalArea, SquashHorizontalArea, ps.Y > 0))
+                yield break;
+            yield return null;
+        }
+        Delaying = true;
+        yield return StartDelay;
+        Delaying = false;
+
+        for(int currentFromNode = 0; currentFromNode < Nodes.Length - 1; currentFromNode++)
+        {
+            Vector2 from = Nodes[currentFromNode];
+            Vector2 to = Nodes[currentFromNode + 1];
+            bool motionTweenCompleted = false;
+            Tween motionTween = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, MoveTimes[currentFromNode]);
+            motionTween.OnUpdate = t => CameraPosition = Calc.LerpSnap(from, to, t.Eased);
+            motionTween.OnComplete = _ => motionTweenCompleted = true;
+            Add(motionTween);
+            motionTween.Start();
+            while(!motionTweenCompleted)
+            {
+                Vector2 p = to - from;
+                if(DoPlayerDieCheck(level, player, SquashHorizontalArea, SquashHorizontalArea, p.Y > 0))
+                    yield break;
+                yield return null;
+            }
+            Delaying = true;
+            yield return DelaySequence[currentFromNode];
+            Delaying = false;
+        }
+        LeadingTheReel = false;
+        DoingPlayer = null;
+        yield break;
+    }
+
+    public bool DoPlayerDieCheck(Level level, Player player, bool leftSquash, bool rightSquash, bool isYPositive)
+    {
+        if(level.Tracker.GetEntity<Player>() == null) return false;
+        if(player is null) return false;
+        bool died = false;
+        try
+        {
+            float xx = level.Camera.Left + player.Width / 2;
+            if(player.X < xx)
+            {
+                player.MoveH(xx - player.X, OnCollide);
+
+                if(!leftSquash)
+                {
+                    player.Die(Vector2.UnitX);
+                    died = true;
+                }
+            }
+            xx = level.Camera.Right - player.Width / 2;
+            if(player.X > xx)
+            {
+                player.MoveH(xx - player.X, OnCollide);
+
+                if(!rightSquash)
+                {
+                    player.Die(-Vector2.UnitX);
+                    died = true;
+                }
+            }
+            float yy = level.Camera.Top - player.Height / 2;
+            if(player.Y < yy)
+            {
+                if(isYPositive)
+                {
+                    player.Die(-Vector2.UnitY);
+                    died = true;
+                }
+                player.MoveV(yy - player.Y, OnCollide);
+
+            }
+            if(player.Y > level.Camera.Bottom + player.Height)
+            {
+                player.Die(Vector2.UnitY);
+                died = true;
+            }
+        }
+        catch(Exception e)
+        {
+            Logger.Log(LogLevel.Error, Module.Name, "at ReelCamera die check:" + "\n" + e.Message + "\n" + e.StackTrace);
+        }
+        return died;
+        void OnCollide(CollisionData data)
+        {
+            if(data.Moved.LengthSquared() == 0.0f)
+            {
+                Logger.Log(LogLevel.Info, "test", $"target: {data.TargetPosition} , player: {player.Position}");
+                if((data.TargetPosition - player.Position).Length() <= 5.0f)
+                {
+                    player.Die(data.Direction);
+                    died = true;
+                }
             }
         }
     }

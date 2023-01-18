@@ -193,6 +193,8 @@ public class RuleManager
                     //解析其后所跟的adv
                     if(TryGetAt(firstSubjectChainLength - nots, out var wordx1))
                     {
+                        //falling_blokc be_crushed_by is madeline
+
                         //madeline climb not falling_block has two_dashes
                         //0        1     2   3             4   5
                         switch(GetWordType(wordx1))
@@ -200,6 +202,9 @@ public class RuleManager
                             //后一个位置是 adv, 开始解析为一个subject
                             case WordType.Adv:
                             ISubjectMarker marker = TryParseAndSubjectChain(2, out int chainLength);
+                            //后跟一个adv但是没有第二个subject, 直接退出这次解析, 因为不可能这个subject会解析出规则
+                            if(marker is null)
+                                continue;
                             subject = new AdvSubject(nottedSubject, wordx1, marker);
                             verbIndex = firstSubjectChainLength - nots + 1 + chainLength;
 
