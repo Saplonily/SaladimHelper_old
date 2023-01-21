@@ -1,8 +1,8 @@
-*/*.dll
-*/bin/*
-*/obj/*
-*/.vs
-*/.vscode
-*/.VSCodeCounter
-*/packages
+**/*.dll
+**/bin/*
+**/obj/*
+**/.vs
+**/.vscode
+**/.VSCodeCounter
+**/packages
 .vscode/*

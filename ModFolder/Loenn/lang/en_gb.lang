@@ -1,0 +1,18 @@
+triggers.SaladimHelper/KeyTeleField.placements.name.saladimHelper_keyTeleField_normal=Key To Teleport Field (Saladim Helper)
+triggers.SaladimHelper/KeyTeleField.attributes.description.cross_room=Use glyph like effect or not.
+triggers.SaladimHelper/KeyTeleField.attributes.description.absolute_displacement=Use aim_x,aim_y `Add`(when set to false) or `Set`(when set to true) to position of player.
+
+entities.SaladimHelper/MiyDreamBlock.placements.name.saladimHelper_miyDreamBlock=Dream Block (Miy ver, Saladim Helper)
+entities.SaladimHelper/MiyFallingBlock.placements.name.saladimHelper_falling_block=Falling Block (Miy ver, Saladim Helper)
+entities.SaladimHelper/MiyRuleManagedField.placements.name.saladimHelper_miyRuleManagedField=Miy Rule Text Managed Field (Saladim Helper)
+entities.SaladimHelper/MiyText.placements.name.saladimHelper_miyText=Miy Rule Text (Saladim Helper)
+entities.SaladimHelper/ReelCamera.placements.name.saladimHelper_reelCamera=Reel Camera Trigger Entity (Saladim Helper)
+entities.SaladimHelper/MiyRefill.placements.name.saladimHelper_miyRefill_oneDash=Refill (One Dash, Miy ver, Saladim Helper)
+entities.SaladimHelper/MiyRefill.placements.name.saladimHelper_miyRefill_twoDash=Refill (Two Dash, Miy ver, Saladim Helper)
+
+triggers.SaladimHelper/FgOpacityTrigger.placements.name.saladimHelper_fgOpacityTrigger=Foreground Opacity Fade Trigger (Saladim Helper)
+triggers.SaladimHelper/LightSwitchField.placements.name.saladimHelper_lightSwitchField=Key To Light Switch Field (Saladim Helper)
+triggers.SaladimHelper/LiteKeyLimiterTrigger.placements.name.saladimHelper_liteKeyLimiterTrigger=Key Limiter Trigger (Saladim Helper)
+
+entities.SaladimHelper/LightInvisibilityBlock.placements.name.saladimHelper_lightInvisibilityBlock=Light Invisibility Block (Saladim Helper)
+entities.SaladimHelper/LightInvisibilityFloatBlock.placements.name.saladimHelper_lightInvisibilityFloatBlock=Light Invisibility Float Block (Saladim Helper)

@@ -1,9 +1,10 @@
 using Celeste.Mod.Entities;
+using Celeste.Mod.SaladimHelper;
 using Microsoft.Xna.Framework;
 
 namespace Celeste.Mod.LiteKeyLimiter.Triggers;
 
-[CustomEntity("LiteKeyLimiter/LiteKeyLimiterHelper", "LiteKeyLimiter/LiteKeyLimiterTrigger")]
+[CustomEntity("SaladimHelper/LiteKeyLimiterTrigger")]
 public class LiteKeyLimiterTrigger : Trigger
 {
     public bool LimitMoveX = false;
