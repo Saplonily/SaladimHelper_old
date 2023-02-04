@@ -23,10 +23,12 @@ public class ReelLimitManager
     {
         orig(self);
         var reelCamera = Module.Session.CurrentReelCamera;
-        if(reelCamera != null)
+        if (reelCamera != null)
         {
             Level level = self.SceneAs<Level>();
+            var c = level.Camera;
             level.CameraOffset = reelCamera.CameraPosition - self.Position;
+            level.Camera.Position = reelCamera.CameraPosition - new Vector2(c.Right - c.Left, c.Bottom - c.Top) / 2;
         }
     }
 

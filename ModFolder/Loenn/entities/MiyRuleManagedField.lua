@@ -12,6 +12,8 @@ local miyRuleManagedField = {
     }
 }
 
+miyRuleManagedField.depth = 23333
+
 function miyRuleManagedField.draw(room, entity, viewport)
     love.graphics.setColor(51.0 / 255, 98.0 / 255, 88.0 / 255, 0.3)
     love.graphics.rectangle("fill", entity.x, entity.y, entity.width, entity.height)

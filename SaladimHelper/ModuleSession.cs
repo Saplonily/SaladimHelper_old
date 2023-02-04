@@ -14,6 +14,8 @@ public class ModuleSession : EverestModuleSession
 
     public bool LimitedMoveY { get; set; } = false;
 
+    public bool SwitchedLight { get; set; } = true;
+
     #region do not save these
     [YamlIgnore]
     public KeyTeleField TeleFieldIn = null;
@@ -27,8 +29,6 @@ public class ModuleSession : EverestModuleSession
     [YamlIgnore]
     public MiyRuleManagedField CurrentMiyField;
 
-    [YamlIgnore]
-    public bool SwitchedLight = false;
     #endregion
 
 

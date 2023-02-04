@@ -35,7 +35,7 @@ public class ReelCamera : Entity
         Collider = new Hitbox(data.Width, data.Height);
 
         Nodes = data.NodesOffset(offset);
-        for(int i = 0; i < Nodes.Length; i++)
+        for (int i = 0; i < Nodes.Length; i++)
         {
             Nodes[i] = Nodes[i] with { X = Nodes[i].X + Width / 2, Y = Nodes[i].Y + Height / 2 };
         }
@@ -44,7 +44,7 @@ public class ReelCamera : Entity
         {
             var moveTimeSequenceStr = data.Attr("move_time_sequence");
             var moveTimeSequenceStrs = moveTimeSequenceStr.Split(',');
-            if(moveTimeSequenceStrs.Length != Nodes.Length - 1)
+            if (moveTimeSequenceStrs.Length != Nodes.Length - 1)
                 throw new Exception($"MoveEime sequence load failed. Except {Nodes.Length - 1}(Nodes.Length) " +
                     $"but got {moveTimeSequenceStrs.Length}");
             MoveTimes = (
@@ -55,7 +55,7 @@ public class ReelCamera : Entity
 
             var delaySequenceStr = data.Attr("delay_sequence");
             var delaySequenceStrs = delaySequenceStr.Split(',');
-            if(delaySequenceStrs.Length != Nodes.Length - 1)
+            if (delaySequenceStrs.Length != Nodes.Length - 1)
                 throw new Exception($"Delay sequence load failed. Except {Nodes.Length - 1}(Nodes.Length) " +
                     $"but got {delaySequenceStrs.Length}");
             DelaySequence = (
@@ -70,7 +70,7 @@ public class ReelCamera : Entity
             sb.Append(string.Join("|", DelaySequence));
             Logger.Log(LogLevel.Info, "SaladimHelper", $"Loaded ReelCamera: {sb}");
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             throw new Exception($"Loading sequence failed. Maybe failed parsing numbers. Inner msg:{e.Message}");
         }
@@ -85,10 +85,10 @@ public class ReelCamera : Entity
         base.Update();
         Level level = SceneAs<Level>();
         var c = level.Camera;
-        if(LeadingTheReel)
+        if (LeadingTheReel)
         {
-            if(Delaying && Get<Coroutine>() != null && DoingPlayer != null)
-                if(DoPlayerDieCheck(level, DoingPlayer, SquashHorizontalArea, SquashHorizontalArea, false))
+            if (Delaying && Get<Coroutine>() != null && DoingPlayer != null)
+                if (DoPlayerDieCheck(level, DoingPlayer, SquashHorizontalArea, SquashHorizontalArea, false))
                 {
                     LeadingTheReel = false;
                 }
@@ -96,7 +96,7 @@ public class ReelCamera : Entity
         else
         {
             Player player = CollideFirst<Player>();
-            if(player is not null)
+            if (player is not null)
             {
                 DoingPlayer = player;
                 LeadingTheReel = true;
@@ -123,17 +123,18 @@ public class ReelCamera : Entity
         Add(startTween);
         startTween.Start();
         Vector2 ps = startTo - startFrom;
-        while(!startTweenCompleted)
+        while (!startTweenCompleted)
         {
-            if(DoPlayerDieCheck(level, player, SquashHorizontalArea, SquashHorizontalArea, ps.Y > 0))
+            if (DoPlayerDieCheck(level, player, SquashHorizontalArea, SquashHorizontalArea, ps.Y > 0))
                 yield break;
             yield return null;
         }
         Delaying = true;
-        yield return StartDelay;
+        if (StartDelay != 0.0f)
+            yield return StartDelay;
         Delaying = false;
 
-        for(int currentFromNode = 0; currentFromNode < Nodes.Length - 1; currentFromNode++)
+        for (int currentFromNode = 0; currentFromNode < Nodes.Length - 1; currentFromNode++)
         {
             Vector2 from = Nodes[currentFromNode];
             Vector2 to = Nodes[currentFromNode + 1];
@@ -143,15 +144,16 @@ public class ReelCamera : Entity
             motionTween.OnComplete = _ => motionTweenCompleted = true;
             Add(motionTween);
             motionTween.Start();
-            while(!motionTweenCompleted)
+            while (!motionTweenCompleted)
             {
                 Vector2 p = to - from;
-                if(DoPlayerDieCheck(level, player, SquashHorizontalArea, SquashHorizontalArea, p.Y > 0))
+                if (DoPlayerDieCheck(level, player, SquashHorizontalArea, SquashHorizontalArea, p.Y > 0))
                     yield break;
                 yield return null;
             }
             Delaying = true;
-            yield return DelaySequence[currentFromNode];
+            if (DelaySequence[currentFromNode] != 0.0f)
+                yield return DelaySequence[currentFromNode];
             Delaying = false;
         }
         LeadingTheReel = false;
@@ -161,37 +163,37 @@ public class ReelCamera : Entity
 
     public bool DoPlayerDieCheck(Level level, Player player, bool leftSquash, bool rightSquash, bool isYPositive)
     {
-        if(level.Tracker.GetEntity<Player>() == null) return false;
-        if(player is null) return false;
+        if (level.Tracker.GetEntity<Player>() == null) return false;
+        if (player is null) return false;
         bool died = false;
         try
         {
             float xx = level.Camera.Left + player.Width / 2;
-            if(player.X < xx)
+            if (player.X < xx)
             {
                 player.MoveH(xx - player.X, OnCollide);
 
-                if(!leftSquash)
+                if (!leftSquash)
                 {
                     player.Die(Vector2.UnitX);
                     died = true;
                 }
             }
             xx = level.Camera.Right - player.Width / 2;
-            if(player.X > xx)
+            if (player.X > xx)
             {
                 player.MoveH(xx - player.X, OnCollide);
 
-                if(!rightSquash)
+                if (!rightSquash)
                 {
                     player.Die(-Vector2.UnitX);
                     died = true;
                 }
             }
             float yy = level.Camera.Top - player.Height / 2;
-            if(player.Y < yy)
+            if (player.Y < yy)
             {
-                if(isYPositive)
+                if (isYPositive)
                 {
                     player.Die(-Vector2.UnitY);
                     died = true;
@@ -199,23 +201,23 @@ public class ReelCamera : Entity
                 player.MoveV(yy - player.Y, OnCollide);
 
             }
-            if(player.Y > level.Camera.Bottom + player.Height)
+            if (player.Y > level.Camera.Bottom + player.Height)
             {
                 player.Die(Vector2.UnitY);
                 died = true;
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Logger.Log(LogLevel.Error, Module.Name, "at ReelCamera die check:" + "\n" + e.Message + "\n" + e.StackTrace);
         }
         return died;
         void OnCollide(CollisionData data)
         {
-            if(data.Moved.LengthSquared() == 0.0f)
+            if (data.Moved.LengthSquared() == 0.0f)
             {
                 Logger.Log(LogLevel.Info, "test", $"target: {data.TargetPosition} , player: {player.Position}");
-                if((data.TargetPosition - player.Position).Length() <= 5.0f)
+                if ((data.TargetPosition - player.Position).Length() <= 5.0f)
                 {
                     player.Die(data.Direction);
                     died = true;

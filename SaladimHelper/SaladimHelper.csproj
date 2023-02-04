@@ -20,13 +20,13 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-		<DebugType>embedded</DebugType>
+		<DebugType>portable</DebugType>
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-		<DebugType>embedded</DebugType>
+		<DebugType>portable</DebugType>
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
