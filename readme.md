@@ -7,7 +7,7 @@
 ## 一些要注意的
 
 - 每个项目都会存在一个叫`build.bat`的文件, 如果要自行编译请更改其内容, 它的作用是编译完成后将所有文件复制到蔚蓝的mods目录下
-- 什么`Graphics``Loenn``everest.yaml`, 、都在`ModFolder`这个文件夹里
+- 什么`Graphics` `Loenn` `everest.yaml`, 、都在`ModFolder`这个文件夹里
 
 ## 如何编译
 
