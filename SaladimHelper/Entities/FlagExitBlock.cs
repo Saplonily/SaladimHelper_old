@@ -21,7 +21,6 @@ public class FlagExitBlock : ExitBlock
 
     public bool GetIsSkipOrigUpdateCheck()
     {
-        Logger.Log(LogLevel.Info, "S", $"expected check: {expectedFlag}");
         return !SceneAs<Level>().Session.GetFlag(expectedFlag);
     }
 }
