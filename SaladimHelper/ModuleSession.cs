@@ -17,6 +17,7 @@ public class ModuleSession : EverestModuleSession
     public bool SwitchedLight { get; set; } = true;
 
     #region do not save these
+
     [YamlIgnore]
     public KeyTeleField TeleFieldIn = null;
 

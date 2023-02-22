@@ -12,11 +12,16 @@ namespace Celeste.Mod.SaladimHelper;
 [Manager]
 public class ReelLimitManager
 {
-    public static ReelLimitManager Instance { get; private set; }
-
     public static void Load()
     {
         On.Celeste.Player.Update += Player_Update;
+        Everest.Events.Player.OnDie += _ => CameraReset();
+        Everest.Events.Level.OnTransitionTo += (_, _, _) => CameraReset();
+    }
+
+    private static void CameraReset()
+    {
+        Module.Session.CurrentReelCamera = null;
     }
 
     private static void Player_Update(On.Celeste.Player.orig_Update orig, Player self)
@@ -32,7 +37,7 @@ public class ReelLimitManager
         }
     }
 
-    public static void UnLoad()
+    public static void Unload()
     {
         On.Celeste.Player.Update -= Player_Update;
 

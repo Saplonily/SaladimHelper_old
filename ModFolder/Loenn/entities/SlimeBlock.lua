@@ -17,10 +17,9 @@ slimeBlock.fieldInformation = {
     level = {
         options = {
             ["None"] = 0.0,
-            ["Sticky"] = 0.5,
+            ["Sticky"] = 0.3,
             ["Small"] = 0.8,
             ["Normal"] = 1.1,
-            ["Super"] = 1.3,
         },
         editable = false
     }

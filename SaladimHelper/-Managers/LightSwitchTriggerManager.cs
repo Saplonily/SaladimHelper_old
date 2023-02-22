@@ -6,8 +6,6 @@ namespace Celeste.Mod.SaladimHelper;
 [Manager]
 public class LightSwitchTriggerManager
 {
-    public static LightSwitchTriggerManager Instance { get; private set; }
-
     public static void Load()
     {
         On.Celeste.LightingRenderer.BeforeRender += LightingRenderer_BeforeRender;
@@ -58,7 +56,7 @@ public class LightSwitchTriggerManager
         }
     }
 
-    public static void UnLoad()
+    public static void Unload()
     {
         On.Celeste.LightingRenderer.BeforeRender -= LightingRenderer_BeforeRender;
     }

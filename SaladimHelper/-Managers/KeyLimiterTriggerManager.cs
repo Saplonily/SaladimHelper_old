@@ -3,8 +3,6 @@
 [Manager]
 public class KeyLimiterTriggerManager
 {
-    public static KeyLimiterTriggerManager Instance { get; private set; }
-
     public static void Load()
     {
         On.Celeste.Player.Update += ModPlayer_Update;
@@ -23,7 +21,7 @@ public class KeyLimiterTriggerManager
         orig(self);
     }
 
-    public static void UnLoad()
+    public static void Unload()
     {
         On.Celeste.Player.Update -= ModPlayer_Update;
 

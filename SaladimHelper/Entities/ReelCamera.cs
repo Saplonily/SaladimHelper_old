@@ -22,7 +22,8 @@ public class ReelCamera : Entity
     public float StartMoveTime;
 
     public bool Delaying = false;
-    public Player DoingPlayer = null;
+
+    public Player DoingPlayer;
 
     public bool LeadingTheReel
     {
@@ -64,10 +65,10 @@ public class ReelCamera : Entity
                 select delay
                 ).ToArray();
 
-            StringBuilder sb = new();
-            sb.Append(string.Join("|", MoveTimes));
-            sb.Append(@"\\\\");
-            sb.Append(string.Join("|", DelaySequence));
+            StringBuilder sb = new(15);
+            sb.Append(string.Join(",", MoveTimes));
+            sb.Append(@"  |  ");
+            sb.Append(string.Join(",", DelaySequence));
             Logger.Log(LogLevel.Info, "SaladimHelper", $"Loaded ReelCamera: {sb}");
         }
         catch (Exception e)
@@ -83,15 +84,18 @@ public class ReelCamera : Entity
     public override void Update()
     {
         base.Update();
+
         Level level = SceneAs<Level>();
         var c = level.Camera;
         if (LeadingTheReel)
         {
-            if (Delaying && Get<Coroutine>() != null && DoingPlayer != null)
+            if (Delaying && DoingPlayer != null)
+            {
                 if (DoPlayerDieCheck(level, DoingPlayer, SquashHorizontalArea, SquashHorizontalArea, false))
                 {
                     LeadingTheReel = false;
                 }
+            }
         }
         else
         {
@@ -100,18 +104,16 @@ public class ReelCamera : Entity
             {
                 DoingPlayer = player;
                 LeadingTheReel = true;
+
                 Add(new Coroutine(GetMovingCoroutine(level, player)));
                 CameraPosition = c.Position + new Vector2(c.Right - c.Left, c.Bottom - c.Top) / 2;
-            }
-            else
-            {
-                LeadingTheReel = false;
             }
         }
     }
 
     public IEnumerator GetMovingCoroutine(Level level, Player player)
     {
+        Logger.Log(LogLevel.Info, "S", $"coroutine : {player}");
         DoingPlayer = player;
         Camera c = level.Camera;
         bool startTweenCompleted = false;
@@ -216,7 +218,6 @@ public class ReelCamera : Entity
         {
             if (data.Moved.LengthSquared() == 0.0f)
             {
-                Logger.Log(LogLevel.Info, "test", $"target: {data.TargetPosition} , player: {player.Position}");
                 if ((data.TargetPosition - player.Position).Length() <= 5.0f)
                 {
                     player.Die(data.Direction);

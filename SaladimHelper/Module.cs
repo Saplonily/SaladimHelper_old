@@ -40,15 +40,10 @@ public class Module : EverestModule
             var attr = type.GetCustomAttribute<ManagerAttribute>();
             if(attr is not null)
             {
-                var ins = Activator.CreateInstance(type);
-                if(ins is null) continue;
                 var loadMethod = type.GetMethod("Load");
-                var unloadMethod = type.GetMethod("UnLoad");
-                var prop = type.GetProperty("Instance");
-                if(loadMethod is null) throw new Exception("load null");
-                if(unloadMethod is null) throw new Exception("unload null");
-                if(prop is null) throw new Exception("prop null");
-                prop.SetValue(null, ins);
+                var unloadMethod = type.GetMethod("Unload");
+                if(loadMethod is null) throw new Exception($"Manager {type} hasn't Load Method.");
+                if(unloadMethod is null) throw new Exception($"Manager {type} hasn't Unload Method.");
                 loadMethods.Add(loadMethod);
                 unloadMethods.Add(unloadMethod);
             }
@@ -61,7 +56,6 @@ public class Module : EverestModule
         Logger.Log(LogLevel.Info, Name, "Hook methods on Load()...");
 
         On.Celeste.Player.Update += Player_Update;
-        IL.Celeste.Player.NormalUpdate += Player_NormalUpdate;
         Everest.Events.Input.OnInitialize += Input_OnInitialize;
         foreach(var d in loadMethods)
             d.Invoke(null, new object[] { });
@@ -70,15 +64,11 @@ public class Module : EverestModule
     public override void Unload()
     {
         On.Celeste.Player.Update -= Player_Update;
-        IL.Celeste.Player.NormalUpdate -= Player_NormalUpdate;
         Everest.Events.Input.OnInitialize -= Input_OnInitialize;
         foreach(var d in unloadMethods)
             d.Invoke(null, new object[] { });
     }
     #endregion
-
-
-    #region Hooks
 
     private void Input_OnInitialize()
     {
@@ -91,21 +81,5 @@ public class Module : EverestModule
 
         KeyTeleField.CheckAndTele(self);
     }
-
-    private void Player_NormalUpdate(ILContext il)
-    {
-        ILCursor cur = new(il);
-
-        Logger.Log(LogLevel.Info, Module.Name, "Try hooking acc Muilt...");
-
-        while(cur.TryGotoNext(MoveType.After, ins => ins.MatchLdcR4(400.0f) || ins.MatchLdcR4(1000.0f)))
-        {
-            cur.EmitDelegate(() => Session.AccStep / 1000.0f);
-            cur.Emit(OpCodes.Mul);
-            Logger.Log(LogLevel.Info, Module.Name, $"Hooked normalUpdate of acc Muilt at IL{cur.Index}");
-        }
-    }
-
-    #endregion
 
 }

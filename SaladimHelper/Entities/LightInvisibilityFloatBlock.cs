@@ -12,6 +12,7 @@ namespace Celeste.Mod.SaladimHelper.Entities;
 [CustomEntity("SaladimHelper/LightInvisibilityFloatBlock"), Tracked, TrackedAs(typeof(FloatySpaceBlock))]
 public class LightInvisibilityFloatBlock : FloatySpaceBlock, IInvisible
 {
+    protected float lightFearRadiusRadio = 1.0f;
     protected LightOcclude lightOcclude;
     protected LightInvisibilityComponent lightComponent;
     protected DynamicData thisData;
@@ -23,17 +24,23 @@ public class LightInvisibilityFloatBlock : FloatySpaceBlock, IInvisible
               data.Height,
               data.Char("tiletype", '3'),
               data.Bool("disableSpawnOffset", false),
-              data.Bool("fear_player_light", true)
+              data.Bool("fear_player_light", true),
+              data.Float("light_radius_radio", 1.0f)
               )
     {
     }
 
-    public LightInvisibilityFloatBlock(Vector2 position, float width, float height, char tileType, bool disableSpawnOffset, bool fearLight)
+    public LightInvisibilityFloatBlock(Vector2 position,
+        float width, float height,
+        char tileType, bool disableSpawnOffset,
+        bool fearLight, float lightFearRadiusRadio = 1.0f
+        )
         : base(position, width, height, tileType, disableSpawnOffset)
     {
         thisData = DynamicData.For(this);
         Add(lightComponent = new LightInvisibilityComponent(fearLight));
         lightOcclude = Get<LightOcclude>();
+        this.lightFearRadiusRadio = lightFearRadiusRadio;
     }
 
     public override void Awake(Scene scene)
@@ -86,7 +93,7 @@ public class LightInvisibilityFloatBlock : FloatySpaceBlock, IInvisible
         var players = level.Tracker.GetEntities<Player>().Cast<Player>();
         bool isInvisible = Module.Session.SwitchedLight && players.Any(p => Collide.CircleToRect(
             p.Light.Position + p.Position,
-            p.Light.EndRadius,
+            p.Light.EndRadius * lightFearRadiusRadio,
             new Rectangle(
                 (int)Position.X, (int)Position.Y,
                 (int)Width, (int)Height

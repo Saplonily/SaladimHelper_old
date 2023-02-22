@@ -11,8 +11,6 @@ namespace Celeste.Mod.SaladimHelper;
 [Manager]
 public class MiyManager
 {
-    public static MiyManager Instance { get; private set; }
-
     public static void Load()
     {
         On.Celeste.Player.ctor += Player_ctor;
@@ -91,7 +89,7 @@ public class MiyManager
         Module.Session.CurrentMiyField = null;
     }
 
-    public static void UnLoad()
+    public static void Unload()
     {
         On.Celeste.Player.ctor -= Player_ctor;
         On.Celeste.Player.Die -= Player_Die;

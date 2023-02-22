@@ -8,7 +8,6 @@ namespace Celeste.Mod.SaladimHelper;
 public class HiddenerManager
 {
     private static FieldInfo mapEditorLevelList = typeof(MapEditor).GetField("levels", BindingFlags.Instance | BindingFlags.NonPublic);
-    public static HiddenerManager Instance { get; private set; }
 
     public static void Load()
     {
@@ -30,7 +29,7 @@ public class HiddenerManager
 
     }
 
-    public static void UnLoad()
+    public static void Unload()
     {
         On.Celeste.Editor.MapEditor.ctor -= MapEditor_ctor;
     }
